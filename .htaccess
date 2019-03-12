@@ -1,0 +1,12 @@
+RewriteEngine On
+
+# Rewrite Query String to Path 
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^/?sheet/(.*?)/(.*?)/(.*?)/?$ /sheet.php?id=$1&table=$2&row=$3 [L]
+RewriteRule ^/?sheet/(.*?)/(.*?)/?$ /sheet.php?id=$1&table=$2 [L]
+RewriteRule ^/?sheet/(.*?)/?$ /sheet.php?id=$1 [L]
+
+# Redirect the query string URL to the nicer looking
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /sheet\.php\?id=([^\&\ ]+)
+RewriteRule ^/?sheet\.php$ /sheet/%1? [L,R=301]

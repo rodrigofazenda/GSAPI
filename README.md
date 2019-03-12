@@ -1,2 +1,2 @@
-# GSAA
-Google Sheets AS API
+# GSAPI
+Google Sheets API
