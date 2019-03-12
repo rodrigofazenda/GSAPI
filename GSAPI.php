@@ -191,7 +191,6 @@ class GSAPI {
                 $row->{$data["key"]} = $data["value"];
             }
         }
-        // var_dump($row);
         return $row;
     }
     
