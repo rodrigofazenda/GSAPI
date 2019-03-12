@@ -18,9 +18,9 @@ Click in File > Publish to the web... > click Publish button
 
 > https://gsapi.kelvins.cc/sheet/{GOOGLE_SHEET_ID}/{TABLE_NAME}/{ROW_INDEX}
 
-GOOGLE_SHEET_ID: The last path of Google Sheet Link, something like this -> 1aVGHEZk0C4lv_hJOTYI_OOFWKuqgTH2pcScXEio6XuQ/
-TABLE_NAME: name of the table like users, posts, news
-ROW_INDEX: Index of the row you want to return
+- GOOGLE_SHEET_ID: The last path of Google Sheet Link, something like this -> 1aVGHEZk0C4lv_hJOTYI_OOFWKuqgTH2pcScXEio6XuQ/
+- TABLE_NAME: name of the table like users, posts, news
+- ROW_INDEX: Index of the row you want to return
 
 Examples:
 
