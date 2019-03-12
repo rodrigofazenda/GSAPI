@@ -36,14 +36,12 @@ class GSAPI {
     /** 
      * @var Integer $row
      */
-    private $row = 0;
+    private $row = "";
 
 
     // GETTERS AND SETTERS
 
     public function addTable($table, $entry) {
-        var_dump($table);
-        var_dump($entry);
         $this->sheet->{$table} = $entry;
     }
 
@@ -85,8 +83,39 @@ class GSAPI {
         $this->setSheetID($sheetID);
         $this->setTable($table);
         $this->setRow($row);
-
+        
+        // Get Sheet Info
         $this->getSheetInfo(1);
+        
+        $this->outputData();
+    }
+    
+    /**
+     * Check Path Query informed and send output data accordingly
+     */
+    private function outputData() {
+        // Get Table Info If Informed
+        if ($this->getTable() != "") {
+            // Check Table Exists in Sheet Informed
+            if(!isset($this->getSheet()->{$this->getTable()})) {
+                $this->sendError("There is no table called " . $this->getTable() . " in the Sheet informed.");
+            } else {
+                // Check Row Informed
+                if ($this->getRow() != "") {
+                    if(isset($this->getSheet()->{$this->getTable()}[$this->getRow()])) {
+                        $this->returnOK($this->getSheet()->{$this->getTable()}[$this->getRow()]);
+                    } else {
+                        $this->sendError("There is no index " . $this->getRow() . " in the table called " . $this->getTable() . " in the Sheet informed.");
+                    }
+                } else {
+                    // OUTPUT: Return Table Info
+                    $this->returnOK($this->getSheet()->{$this->getTable()});
+                }
+            }
+        } else {
+            // OUTPUT: Return All Sheet
+            $this->returnOK($this->getSheet());
+        }
     }
 
     /**
@@ -100,17 +129,12 @@ class GSAPI {
         if ($this->isValidJSON($data)) {
             $data = json_decode($data);
             $this->handleFeed($data->feed);
-
-
-            if ($this->getTable() != "") {
-
-            } else {
-                $this->sendError("NO");
-            }
-
-            // $this->getSheetInfo($tableId++);
+            $tableId++;
+            $this->getSheetInfo($tableId);
         } else {
-            $this->sendError("Google Sheet Returned a non JSON Object, please check if the sheet id is correct and if it is published on the web indeed.");
+            if ($tableId == 1) {
+                $this->sendError("Sheet Returned a non JSON Object, please check if the sheet id is correct and if it is published on the web indeed.");
+            }
         }
     }
 
@@ -136,12 +160,58 @@ class GSAPI {
      * @param stdClass $feed
      */
     private function handleFeed($feed) {
-        var_dump($feed);
         $this->addTable($feed->title->{"\$t"}, $this->formatEntry($feed->entry));
     }
-
+    
+    /**
+     * Format Entry Array
+     * 
+     * @param Array $entry
+     * 
+     * @return stdclass
+     */
     private function formatEntry($entry) {
-        return $entry;
+        $entryData = array();
+        for ($i = 0; $i < count($entry); $i++) {
+            $entryData[] = $this->hadleEntry($entry[$i]);
+        }
+        return $entryData;
+    }
+    
+    /**
+     * Handle the Object to Useful Data
+     * 
+     * @param stdclass $object
+     */
+    private function hadleEntry($object) {
+        $row = new stdclass;
+        foreach($object as $key=>$value) {
+            $data = $this->checkUsefulData($key, $value);
+            if (count($data) > 0) {
+                $row->{$data["key"]} = $data["value"];
+            }
+        }
+        // var_dump($row);
+        return $row;
+    }
+    
+    /**
+     * Get clean Data
+     * 
+     * @param String $key
+     * @param stdclass $value
+     * 
+     * @return Array
+     */
+    private function checkUsefulData($key, $value) {
+        if (substr($key, 0, 4) == "gsx$") {
+            $id = substr($key, 4, strlen($key)-4);
+            return array(
+                    "key" => $id, 
+                    "value" => $value->{"\$t"}
+                );
+        }
+        return array();
     }
 
     /**
@@ -153,14 +223,24 @@ class GSAPI {
         @json_decode($JSONString);
         return (json_last_error() === JSON_ERROR_NONE);
     }
+    
+    /**
+     * Output 200 OK Status JSON
+     * 
+     * @param Object $object
+     */
+    private function returnOK($object) {
+        http_response_code(200);
+        echo "{\"data\": " . json_encode($object) . ", \"status\": true}";exit;
+    }
 
     /**
-     * Return a Bad Request
+     * Output Bad Request 400
      * 
      * @param String $message
      */
     private function sendError($message) {
         http_response_code(400);
-        echo "{\"message\": \"" . $message . "\", \"error\": true}";exit;
+        echo "{\"message\": \"" . $message . "\", \"status\": false}";exit;
     }
 }
